@@ -27,6 +27,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'vhi_user_id',
+        'vhi_domain_id'
     ];
 
     /**
@@ -58,4 +60,9 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
 }

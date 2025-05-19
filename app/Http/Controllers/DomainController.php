@@ -33,7 +33,7 @@ class DomainController extends Controller
 
         $payload = [
             'domain' => [
-                'name' => $validated['name'],
+                'name' => $validated['name'],                                                                                                                                                                                                   
                 'description' => $validated['description'] ?? '',
                 'enabled' => $validated['enabled'] ?? 'true',
                 'options' => $validated['options'] ? json_decode($validated['options'], true) : new \stdClass(),
@@ -54,6 +54,4 @@ class DomainController extends Controller
             return redirect()->back()->withErrors(['msg' => 'Exception: ' . $e->getMessage()]);
         }
     }
-
-
 }

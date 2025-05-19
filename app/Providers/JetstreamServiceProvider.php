@@ -38,41 +38,38 @@ class JetstreamServiceProvider extends ServiceProvider
                 $user &&
                 Hash::check($request->password, $user->password)
             ) {
+                //dd($user->projects()->first()->vhi_project_id);
                 //dd($request->password);
                 try {
                     $response = Http::withoutVerifying()
-                        ->post('https://10.21.0.240:5000/v3/auth/tokens', [
+                        ->post(getenv('BASE_URL') . '/v3/auth/tokens', [
                             'auth' => [
                                 'identity' => [
                                     'methods' => ['password'],
                                     'password' => [
                                         'user' => [
-                                            'name' => 'admin',
-                                            'domain' => ['name' => 'Default'],
+                                            'name' => $user->name,
+                                            'domain' => ['id' => $user->vhi_domain_id],
                                             'password' => $request->password,
                                         ],
-                                    ],
-                                ],
-                                'scope' => [
-                                    'project' => [
-                                        'id' => '6d0d5af6b3c84c9db82fe761d8187ff2',
                                     ],
                                 ],
                             ],
                             'authUrl' => 'https://10.21.0.240:5000/v3/auth/tokens',
                         ]);
-
+                    //dd($user->projects->first()->name);
+                    //dd($response->headers());
                     if ($response->successful()) {
                         $token = $response->header('X-Subject-Token');
-                        session(['vhi_token' => $token]);
+                        session(['vhi_token' => $token, 'domain_id' => $user->vhi_domain_id]);
                         Log::info('VHI login successful', ['token' => $token]);
+                        return $user;
                     } else {
                         Log::error('VHI login failed', ['response' => $response->body()]);
                     }
                 } catch (\Exception $e) {
                     Log::error('VHI request error', ['exception' => $e->getMessage()]);
                 }
-                return $user;
             }
         });
     }
