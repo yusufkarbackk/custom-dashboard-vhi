@@ -38,7 +38,7 @@ class CreateNewUser implements CreatesNewUsers
 
             try {
                 $auth = Http::withoutVerifying()
-                    ->post('https://10.21.0.240:5000/v3/auth/tokens', [
+                    ->post(getenv('BASE_URL') . '/v3/auth/tokens', [
                         'auth' => [
                             'identity' => [
                                 'methods' => ['password'],
@@ -56,7 +56,7 @@ class CreateNewUser implements CreatesNewUsers
                                 ],
                             ],
                         ],
-                        'authUrl' => 'https://10.21.0.240:5000/v3/auth/tokens',
+                        'authUrl' => getenv('BASE_URL') . '/v3/auth/tokens',
                     ]);
                 //dd($auth->header('X-Subject-Token'));
                 $authToken = $auth->header('X-Subject-Token');
@@ -85,13 +85,11 @@ class CreateNewUser implements CreatesNewUsers
                         'domain_id' => $domainId
                     ],
                 ]);
-                $projectId = $projectResp->json('project.id');
-
 
                 $userResp = Http::withoutVerifying()->withHeaders([
                     'X-Auth-Token' => $authToken,
                     'Content-Type' => 'application/json',
-                ])->post('https://10.21.0.240:5000/v3/users', [
+                ])->post(getenv('BASE_URL') . "/v3/users", [
                     'user' => [
                         'name' => $input['name'],
                         'domain_id' => $domainId,

@@ -12,6 +12,11 @@ class Project extends Model
     protected $fillable = [
         'name',
         'user_id',
+        'is_domain',
+        'enabled',
+        'description',
+        'links',
+        'parent_id',
         'vhi_project_id',
         'vhi_domain_id'
     ];

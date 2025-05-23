@@ -55,7 +55,7 @@ class JetstreamServiceProvider extends ServiceProvider
                                     ],
                                 ],
                             ],
-                            'authUrl' => 'https://10.21.0.240:5000/v3/auth/tokens',
+                            'authUrl' => getenv('BASE_URL') . '/v3/auth/tokens',
                         ]);
                     //dd($user->projects->first()->name);
                     //dd($response->headers());

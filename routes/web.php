@@ -30,16 +30,16 @@ Route::controller(DomainController::class)->group(function () {
 
 Route::controller(ProjectController::class)->group(function () {
     Route::get('/projects', 'index')->name('projects.index');
+    Route::get('/projects/create', 'create')->name('projects.create');
+    Route::post('/projects', 'store')->name('projects.store');
+    Route::get('/projects/{id}', 'show')->name('projects.show');
 });
 
-// Route::controller(Plcaement_Controller::class)->group(function () {
-//     Route::get('/providers', 'index')->name('provider.index');
-// });
-
-Route::controller(VirtualMachineController
-    ::class)->group(function () {
-        Route::get('/servers', 'index')->name('servers.index');
-    });
+Route::controller(VirtualMachineController::class)->group(function () {
+    Route::get('/servers', 'index')->name('servers.index');
+    Route::get('/servers/create', 'create')->name('servers.create');
+    Route::post('/servers', 'store')->name('servers.store');
+});
 
 
 Route::middleware([
