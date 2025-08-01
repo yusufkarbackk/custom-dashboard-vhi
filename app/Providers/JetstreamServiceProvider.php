@@ -41,6 +41,7 @@ class JetstreamServiceProvider extends ServiceProvider
                 //dd($user->projects()->first()->vhi_project_id);
                 //dd($request->password);
                 try {
+                    //($user->name, $request->password, $user->vhi_domain_id);
                     $response = Http::withoutVerifying()
                         ->post(getenv('BASE_URL') . '/v3/auth/tokens', [
                             'auth' => [
@@ -49,7 +50,7 @@ class JetstreamServiceProvider extends ServiceProvider
                                     'password' => [
                                         'user' => [
                                             'name' => $user->name,
-                                            'domain' => ['id' => $user->vhi_domain_id],
+                                            'domain' => ['id' => $user->projects()->first()->vhi_domain_id],
                                             'password' => $request->password,
                                         ],
                                     ],

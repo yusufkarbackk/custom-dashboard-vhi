@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/dashboard');
 });
 
 
@@ -39,6 +39,7 @@ Route::controller(VirtualMachineController::class)->group(function () {
     Route::get('/servers', 'index')->name('servers.index');
     Route::get('/servers/create', 'create')->name('servers.create');
     Route::post('/servers', 'store')->name('servers.store');
+    Route::post('/flavours/select', 'selectFlavor')->name('servers.flavors');
 });
 
 

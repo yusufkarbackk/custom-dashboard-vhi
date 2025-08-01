@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\AdminToken;
 use DB;
 use Http;
 use Illuminate\Support\Facades\Hash;
@@ -16,13 +17,14 @@ class CreateNewUser implements CreatesNewUsers
     use PasswordValidationRules;
 
     /**
-     * Validate and create a newly registered user.
+     * Validate and create a newly  ed user.
      *
      * @param  array<string, string>  $input
      */
     public function create(array $input): User
     {
         Validator::make($input, [
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
@@ -32,86 +34,37 @@ class CreateNewUser implements CreatesNewUsers
             //1. Create the user locally
             $user = User::create([
                 'name' => $input['name'],
-                //'email' => $input['email'],
+                'email' => $input['email'],
                 'password' => Hash::make($input['password']),
             ]);
 
             try {
-                $auth = Http::withoutVerifying()
-                    ->post(getenv('BASE_URL') . '/v3/auth/tokens', [
-                        'auth' => [
-                            'identity' => [
-                                'methods' => ['password'],
-                                'password' => [
-                                    'user' => [
-                                        'name' => getenv('VHI_ADMIN_USERNAME'),
-                                        'domain' => ['name' => getenv('VHI_ADMIN_DOMAIN')],
-                                        'password' => getenv('VHI_ADMIN_PASSWORD'),
-                                    ],
-                                ],
-                            ],
-                            'scope' => [
-                                'project' => [
-                                    'id' => getenv('VHI_ADMIN_PROJECT_ID'),
-                                ],
-                            ],
-                        ],
-                        'authUrl' => getenv('BASE_URL') . '/v3/auth/tokens',
-                    ]);
+                $authToken = (new AdminToken())->getAdminToken();
                 //dd($auth->header('X-Subject-Token'));
-                $authToken = $auth->header('X-Subject-Token');
 
-                $domainResp = Http::withoutVerifying()->withHeaders([
-                    'X-Auth-Token' => $authToken,
-                    'Content-Type' => 'application/json',
-                ])->post(getenv('BASE_URL') . "/v3/domains", [
-                            'domain' => [
-                                'name' => 'domain-user-' . $user->name,
-                                'description' => "Isolated domain for {$user->username}",
-                                'enabled' => true,
-                            ],
-                        ])->throw();
+                $domainId = (new AdminToken())->createDomain('domain-user-' . $user->name, $authToken);
 
-                $domainId = $domainResp->json('domain.id');
+                $projectId = (new AdminToken())->createProject('project-user-' . $user->name, $domainId, $authToken);
 
-                $projectResp = Http::withoutVerifying()->withHeaders([
-                    'X-Auth-Token' => $authToken,
-                    'Content-Type' => 'application/json',
-                ])->post(getenv('BASE_URL') . "/v3/projects", [
-                    'project' => [
-                        'name' => 'project-user-' . $user->name,
-                        'description' => "Isolated project for {$user->name}",
-                        'enabled' => true,
-                        'domain_id' => $domainId
-                    ],
-                ]);
+                $vhiUserId = (new AdminToken())->createUser(
+                    $user->name,
+                    $domainId,
+                    $input['password'],
+                    $authToken
+                );
 
-                $userResp = Http::withoutVerifying()->withHeaders([
-                    'X-Auth-Token' => $authToken,
-                    'Content-Type' => 'application/json',
-                ])->post(getenv('BASE_URL') . "/v3/users", [
-                    'user' => [
-                        'name' => $input['name'],
-                        'domain_id' => $domainId,
-                        'password' => $input['password'],
-                        'enabled' => true,
-                    ],
-                ])->throw();
-
-                $vhiUserId = $userResp->json('user.id');
+                (new AdminToken())->assignDomainAdminRole($authToken, $vhiUserId, $projectId);
 
                 $user->update([
                     'vhi_user_id' => $vhiUserId,
-                    'vhi_domain_id' => $domainId,
                 ]);
 
                 $user->projects()->create([
                     'name' => 'user-' . $user->name,
-                    'vhi_user_id' => $vhiUserId,
                     'vhi_domain_id' => $domainId,
-                    'vhi_project_id' => $projectResp->json('project.id'),
+                    'vhi_project_id' => $projectId,
                 ]);
-                
+
                 \Log::info(message: "User: " . $user);
             } catch (\Throwable $th) {
                 //throw $th;

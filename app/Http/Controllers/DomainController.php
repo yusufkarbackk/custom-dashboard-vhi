@@ -18,6 +18,7 @@ class DomainController extends Controller
             ->get('https://10.21.0.240:5000/v3/domains');
 
         $data = json_decode($response->getBody(), true);
+        dd($data);
         //dd($data['domains']);
         return view('domain.index', ['domains' => $data['domains']]);
     }

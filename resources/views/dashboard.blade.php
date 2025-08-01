@@ -11,30 +11,8 @@
 
     <div class="content">
         <div class="container-fluid">
-            <table id="example" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>CPU</th>
-                        <th>RAM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>VM-01</td>
-                        <td>Running</td>
-                        <td>4 vCPU</td>
-                        <td>8 GB</td>
-                    </tr>
-                    <tr>
-                        <td>VM-02</td>
-                        <td>Stopped</td>
-                        <td>2 vCPU</td>
-                        <td>4 GB</td>
-                    </tr>
-                </tbody>
-            </table>
+            <p>Welcome to the dashboard! Here you can manage your virtual machines and servers.</p>
+            <table></table>
         </div>
     </div>
 @endsection

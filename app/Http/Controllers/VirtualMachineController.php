@@ -24,7 +24,7 @@ class VirtualMachineController extends Controller
 
 
         $data = json_decode($response, true);
-        dd($data);
+        //  dd($data);
         return view('servers.index', ['servers' => $data['servers']]);
     }
 
@@ -71,5 +71,22 @@ class VirtualMachineController extends Controller
             //throw $th;
             return redirect()->route('servers.index')->with('error', 'Failed to create server: ' . $th->getMessage());
         }
+    }
+
+    public function selectFlavor(Request $request)
+    {
+        $request->validate([
+            'flavor_id' => 'required|integer',
+        ]);
+
+        session(['chosen_flavor_id' => $request->flavor_id]);
+        dd($request->flavor_id);
+
+        // try {
+        //     $flavor = $this->virtualMachineService->getFlavorById($flavorId);
+        //     return response()->json($flavor);
+        // } catch (\Exception $e) {
+        //     return response()->json(['error' => 'Failed to retrieve flavor: ' . $e->getMessage()], 500);
+        // }
     }
 }

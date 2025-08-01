@@ -6,9 +6,9 @@
     <div class="content-header">
         <div class="container-fluid">
             <h1 class="m-0">Servers</h1>
-            <button class="btn btn-primary mb-3 mt-3" data-bs-toggle="modal" data-bs-target="#addDomainModal">
+            <a href="{{ route('servers.create') }}" class="btn btn-primary mb-3 mt-3">
                 <i class="fas fa-plus"></i> Add Server
-            </button>
+            </a>
         </div>
     </div>
 

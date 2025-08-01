@@ -24,8 +24,9 @@ class ProjectController extends Controller
         if (!$admin_token) {
             $this->admin_token->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
-        }
-        $domain_id = Auth::user()->vhi_domain_id;
+        } 
+        $domain_id = Auth::user()->projects()->domain_id;
+        Log::info('Fetching projects for domain ID: ' . $domain_id);
         $data = Http::withoutVerifying()
             ->withHeaders([
                 'X-Auth-Token' => $admin_token,

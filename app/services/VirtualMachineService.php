@@ -104,4 +104,28 @@ class VirtualMachineService
             ->get('https://10.21.0.240:9696/v2.0/networks');
         return $response->json();
     }
+
+    public function attachNetwork($project_id)
+    {
+        $admin_token = Session::get('vhi_admin_token');
+        if (!$admin_token) {
+            $this->admin_token->refreshAdminToken();
+            $admin_token = Session::get('vhi_admin_token');
+        }
+
+        $response = Http::withHeaders([
+            'X-Auth-Token' => $admin_token,
+        ])
+            ->withoutVerifying() // bypass SSL cert validation
+            ->post(env('NEUTRON_URL') . "/v2.0/rbac-policies", [
+                'rbac_policy' => [
+                    'object_type' => 'network',
+                    'object_id' => env('PUBVNAT_ID'),
+                    'action' => 'access_as_shared',
+                    'target_tenant' => $project_id,
+                ],
+            ]);
+
+        return $response->json();
+    }
 }
