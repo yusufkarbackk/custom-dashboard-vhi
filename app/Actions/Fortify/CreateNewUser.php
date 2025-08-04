@@ -3,11 +3,15 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\AdminService;
 use App\Services\AdminToken;
-use DB;
-use Http;
+use App\Services\SecurityService;
+use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
 use Str;
@@ -21,6 +25,16 @@ class CreateNewUser implements CreatesNewUsers
      *
      * @param  array<string, string>  $input
      */
+
+    protected $adminService;
+    protected $securityService;
+
+    public function __construct(AdminService $adminService, SecurityService $securityService)
+    {
+        $this->$adminService = $adminService;
+        $this->$securityService = $securityService;
+    }
+
     public function create(array $input): User
     {
         Validator::make($input, [
@@ -39,38 +53,52 @@ class CreateNewUser implements CreatesNewUsers
             ]);
 
             try {
-                $authToken = (new AdminToken())->getAdminToken();
+                $authToken = $this->adminService->getAdminToken();
                 //dd($auth->header('X-Subject-Token'));
 
-                $domainId = (new AdminToken())->createDomain('domain-user-' . $user->name, $authToken);
+                $domainId = $this->adminService->createDomain('domain-user-' . $user->name, $authToken);
+                if (empty($domainId)) {
+                    Log::error("Failed to create domain");
 
-                $projectId = (new AdminToken())->createProject('project-user-' . $user->name, $domainId, $authToken);
+                    throw ValidationException::withMessages([
+                        'create_domain' => 'An internal error occurred while creating domain. Please try again.',
+                    ]);
+                }
 
-                $vhiUserId = (new AdminToken())->createUser(
+                $projectId = $this->adminService->createProject('project-user-' . $user->name, $domainId, $authToken);
+
+                $vhiUserId = $this->adminService->createUser(
                     $user->name,
                     $domainId,
                     $input['password'],
                     $authToken
                 );
 
-                (new AdminToken())->assignDomainAdminRole($authToken, $vhiUserId, $projectId);
+                $assignDomainAdminRole = $this->adminService->assignDomainAdminRole($authToken, $vhiUserId, $projectId);
+                if (!$assignDomainAdminRole) {
+                    Log::error("Failed to assign domain admin role to user {$vhiUserId} in project {$projectId}");
 
+                    throw ValidationException::withMessages([
+                        'assign_domain_role' => 'An internal error occurred while assigning domain admin role to the user. Please try again.',
+                    ]);
+                }
+
+                $this->adminService->attachPubNAT204Network($authToken, $projectId);
                 $user->update([
                     'vhi_user_id' => $vhiUserId,
+                    'vhi_domain_id' => $domainId
                 ]);
 
                 $user->projects()->create([
                     'name' => 'user-' . $user->name,
-                    'vhi_domain_id' => $domainId,
                     'vhi_project_id' => $projectId,
                 ]);
 
-                \Log::info(message: "User: " . $user);
+                Log::info(message: "User: " . $user);
             } catch (\Throwable $th) {
                 //throw $th;
                 DB::rollBack();
-                \Log::error("VHI Sync Failed: " . $th->getMessage() . $th->getLine() . $th->getFile());
-
+                Log::error("VHI Sync Failed: " . $th->getMessage() . $th->getLine() . $th->getFile());
             }
 
             return $user;

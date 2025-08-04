@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Log;
 
-class AdminToken
+class AdminService
 {
     public function getAdminToken()
     {
@@ -142,14 +142,20 @@ class AdminToken
         return $user->json('user.id');
     }
 
-    public function assignDomainAdminRole($authToken, $userId, $projectId)
+    public function assignDomainAdminRole($authToken, $userId, $projectId): bool
     {
-        Http::withoutVerifying()
-            ->withHeaders([
-                'X-Auth-Token' => $authToken,
-                'Content-Type' => 'application/json',
-            ])
-            ->post(getenv('BASE_URL') . "/v3/projects/$projectId/users/$userId/roles/" . env('DOMAIN_ADMIN_ID'));
+        try {
+            Http::withoutVerifying()
+                ->withHeaders([
+                    'X-Auth-Token' => $authToken,
+                    'Content-Type' => 'application/json',
+                ])
+                ->put(getenv('BASE_URL') . "/v3/projects/$projectId/users/$userId/roles/" . env('DOMAIN_ADMIN_ID'));
+            return true;
+        } catch (\Throwable $th) {
+            Log::error("error assign domain admin role: " . $th->getMessage());
+            return false;
+        }
     }
 
     public function updateUserPassword(string $vhiUserId, string $newPassword): bool
@@ -179,11 +185,33 @@ class AdminToken
                 'response' => $response->json()
             ]);
             return false;
-
         } catch (\Exception $e) {
             Log::error('VHI API Connection Error during password update.', [
                 'message' => $e->getMessage()
             ]);
+            return false;
+        }
+    }
+
+    public function attachPubNAT204Network($authToken, $projectId)
+    {
+        try {
+            Http::withoutVerifying()
+                ->withHeaders([
+                    'X-Auth-Token' => $authToken,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post(getenv('NEUTRON_URL') . "v2.0/rbac-policies", [
+                    'rbac_policy' => [
+                        "object_type" => "network",
+                        "object_id" => env('PUBVNAT_ID'),
+                        "action" => "access_as_shared",
+                        "target_tenant" => $projectId
+                    ],
+                ]);
+            return true;
+        } catch (\Throwable $th) {
+            Log::error("error assign domain admin role: " . $th->getMessage());
             return false;
         }
     }

@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AdminService;
 use App\Services\AdminToken;
-use Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Log;
 
 class ProjectController extends Controller
 {
-    private $admin_token;
+    protected $adminService;
     public function __construct()
     {
-        $this->admin_token = new AdminToken();
+        $this->adminService = new AdminService();
     }
     public function index()
     {
@@ -22,10 +23,10 @@ class ProjectController extends Controller
         // //dd($data);
         $admin_token = Session::get('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
         } 
-        $domain_id = Auth::user()->projects()->domain_id;
+        $domain_id = Auth::user()->vhi_domain_id;
         Log::info('Fetching projects for domain ID: ' . $domain_id);
         $data = Http::withoutVerifying()
             ->withHeaders([
@@ -70,7 +71,7 @@ class ProjectController extends Controller
     {
         $admin_token = session('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = session('vhi_admin_token');
         }
         $data = Http::withoutVerifying()

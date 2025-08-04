@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('parent_id')->after('links')->nullable();
             $table->boolean('is_domain')->after('parent_id')->default(false);
             $table->boolean('enabled')->after('is_domain')->default(true);
-            $table->string('parent_id')->after('links')->nullable();
         });
     }
 

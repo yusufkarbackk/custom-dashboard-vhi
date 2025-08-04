@@ -110,7 +110,7 @@
                                         </div>
                                     </div>
                                 </div> -->
-                <div id="nics">
+                <!-- <div id="nics">
                     <div class="nic-row" data-index="0">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault1" checked>
@@ -130,7 +130,7 @@
 
                         {{-- port security toggle optional --}}
                     </div>
-                </div>
+                </div> -->
                 {{-- Security Groups --}}
 
 

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('vhi_project_id')->nullable();
-            $table->string('vhi_domain_id')->nullable();
             $table->timestamps();
         });
     }

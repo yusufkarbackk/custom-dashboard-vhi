@@ -6,16 +6,16 @@ use Illuminate\Support\Facades\Session;
 
 class VirtualMachineService
 {
-    private $admin_token;
+    private $adminService;
     public function __construct()
     {
-        $this->admin_token = new AdminToken();
+        $this->adminService = new AdminService();
     }
     public function getImages()
     {
         $admin_token = Session::get('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
         }
         $response = Http::withHeaders([
@@ -31,7 +31,7 @@ class VirtualMachineService
     {
         $admin_token = Session::get('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
         }
 
@@ -94,7 +94,7 @@ class VirtualMachineService
     {
         $admin_token = Session::get('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
         }
         $response = Http::withHeaders([
@@ -109,7 +109,7 @@ class VirtualMachineService
     {
         $admin_token = Session::get('vhi_admin_token');
         if (!$admin_token) {
-            $this->admin_token->refreshAdminToken();
+            $this->adminService->refreshAdminToken();
             $admin_token = Session::get('vhi_admin_token');
         }
 
