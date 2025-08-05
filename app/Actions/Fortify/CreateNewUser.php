@@ -10,11 +10,13 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Jetstream\Jetstream;
 use Str;
+use Symfony\Component\Console\Input\Input;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -95,6 +97,7 @@ class CreateNewUser implements CreatesNewUsers
                 ]);
 
                 Log::info(message: "User: " . $user);
+                Session::put("vhi_user_token", $input['password']);
             } catch (\Throwable $th) {
                 //throw $th;
                 DB::rollBack();

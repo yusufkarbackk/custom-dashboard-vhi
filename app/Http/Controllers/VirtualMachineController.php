@@ -2,20 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\services\UserService;
 use App\Services\VirtualMachineService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 
 class VirtualMachineController extends Controller
 {
-    private VirtualMachineService $virtualMachineService;
+    protected $userService;
+    protected $virtualMachineService;
 
-    public function __construct(VirtualMachineService $virtualMachineService)
+    public function __construct(UserService $userService, VirtualMachineService $virtualMachineService)
     {
+        $this->userService = $userService;
         $this->virtualMachineService = $virtualMachineService;
     }
     public function index()
     {
+        $user = Auth::user();
+
+        dd($user);
+        $user_token = Session::get('vhi_admin_token');
+        if (!$user_token) {
+            $this->userService->refreshUserToken($user->name, $user->vhi_domain_id, $user->password, $user->vhi_project_id->first());
+            $user_token = Session::get('vhi_user_token');
+        }
         $response = Http::withHeaders([
             'X-Auth-Token' => session('vhi_token'), // or your token variable
         ])

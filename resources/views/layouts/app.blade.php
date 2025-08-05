@@ -13,25 +13,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    @livewireStyles
 </head>
 
 <body class="hold-transition sidebar-mini">
+    <div class="wrapper">
+        @include('layouts.navbar')
+        @include('layouts.sidebar')
 
-    @include('layouts.navbar')
-
-    <div class="container-fluid">
-        <div class="row min-vh-100">
-            {{-- Sidebar --}}
-            <div class="col-md-2 bg-dark text-white p-3">
-                @include('layouts.sidebar')
-            </div>
-
-            {{-- Main Content --}}
-            <main class="col-md-10 p-4">
-                @yield('content')
-            </main>
+        <div class="content-wrapper">
+            @yield('content')
         </div>
-    </div>
+    </div>  
     <footer class="main-footer">
         <div class="float-right d-none d-sm-inline">Custom dashboard</div>
         <strong>&copy; 2025</strong>
@@ -49,6 +42,8 @@
     @yield('scripts')
 
     @stack('scripts')
+    @livewireStyles
+
 </body>
 
 </html>

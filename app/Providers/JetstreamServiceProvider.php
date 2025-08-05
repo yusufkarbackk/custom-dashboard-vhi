@@ -4,13 +4,14 @@ namespace App\Providers;
 
 use App\Actions\Jetstream\DeleteUser;
 use App\Models\User;
-use Hash;
-use Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
 use Laravel\Jetstream\Jetstream;
-use Log;
 
 class JetstreamServiceProvider extends ServiceProvider
 {
@@ -50,14 +51,21 @@ class JetstreamServiceProvider extends ServiceProvider
                                     'password' => [
                                         'user' => [
                                             'name' => $user->name,
-                                            'domain' => ['id' => $user->projects()->first()->vhi_domain_id],
+                                            'domain' => ['id' => $user->vhi_domain_id],
                                             'password' => $request->password,
                                         ],
+                                    ],
+                                ],
+                                'scope' => [
+                                    'project' => [
+                                        'name' => $user->projects()->first()->name,
+                                        'domain' => ['id' => $user->vhi_domain_id],
                                     ],
                                 ],
                             ],
                             'authUrl' => getenv('BASE_URL') . '/v3/auth/tokens',
                         ]);
+                    Session::put("vhi_user_token", $response->header('X-Subject-Token'));
                     //dd($user->projects->first()->name);
                     //dd($response->headers());
                     if ($response->successful()) {
@@ -69,7 +77,7 @@ class JetstreamServiceProvider extends ServiceProvider
                         Log::error('VHI login failed', ['response' => $response->body()]);
                     }
                 } catch (\Exception $e) {
-                    Log::error('VHI request error', ['exception' => $e->getMessage()]);
+                    Log::error('VHI request error', ['exception' => $e->getMessage() . $e->getFile() . $e->getLine()]);
                 }
             }
         });
