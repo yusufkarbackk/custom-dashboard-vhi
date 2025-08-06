@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
 class FlavorSelector extends Component
@@ -19,7 +20,7 @@ class FlavorSelector extends Component
     public function selectFlavor($flavorId)
     {
         $this->selectedFlavor = $flavorId;
-        session(['selected_flavor' => $flavorId]);
+        Session::put('selected_flavor', $flavorId);
     }
 
     public function render()
@@ -27,3 +28,4 @@ class FlavorSelector extends Component
         return view('livewire.flavor-selector');
     }
 }
+    

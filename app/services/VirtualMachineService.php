@@ -13,13 +13,10 @@ class VirtualMachineService
     }
     public function getImages()
     {
-        $admin_token = Session::get('vhi_admin_token');
-        if (!$admin_token) {
-            $this->adminService->refreshAdminToken();
-            $admin_token = Session::get('vhi_admin_token');
-        }
+        $user_token = Session::get('vhi_user_token');
+        
         $response = Http::withHeaders([
-            'X-Auth-Token' => $admin_token,
+            'X-Auth-Token' => $user_token,
         ])
             ->withoutVerifying() // bypass SSL cert validation
             ->get('https://10.21.0.240:9292/v2/images');

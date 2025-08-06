@@ -28,119 +28,35 @@
 <div class="container py-4">
     <h1>Create New VM</h1>
 
-    @csrf
-    <input type="hidden" name="flavor_id" id="selected_flavor_id" value="">
-    <input type="hidden" name="image_id" id="selected_image_id" value="">
-    <input type="hidden" name="network_id" id="selected_network_id" value="">
+    <form action="{{route('servers.store')}}" method="post">
+        @csrf
+        <input type="hidden" name="flavor_id" value="{{ session('selected_flavor') }}">
 
-    {{-- VM Name --}}
-    <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" name="name" class="form-control" required>
-    </div>
-
-    {{-- Flavor --}}
-    <div class="mb-3">
-        <label class="form-label h3 flavor">Flavor</label>
-        @livewire('flavor-selector', ['flavors' => $flavors])
-
-        {{-- Image --}}
+        {{-- VM Name --}}
         <div class="mb-3">
-            <label class="form-label">Image</label>
-            <select name="image_select" id="image_select" class="form-select" required>
-                @foreach($images as $img)
-                <option value="{{ $img['id'] }}">{{ $img['name'] }}</option>
-                @endforeach
-            </select>
+            <label class="form-label">Name</label>
+            <input type="text" name="vm_name" class="form-control" required>
         </div>
-        {{-- Security Groups --}}
 
-
-        {{-- Boot from Volume --}}
+        {{-- Flavor --}}
         <div class="mb-3">
-            <label class="form-label">Boot Volume</label>
-            <div class="input-group">
-                <input type="text" name="block_device[uuid]" class="form-control" placeholder="Image/Volume UUID">
-                <input type="number" name="block_device[volume_size]" class="form-control"
-                    placeholder="Volume Size (GB)" min="1">
-                <span class="input-group-text">
-                    <input type="checkbox" name="block_device[delete_on_termination]" checked>
-                    Delete on Termination
-                </span>
+            <label class="form-label h3 flavor">Flavor</label>
+            @livewire('flavor-selector', ['flavors' => $flavors])
+
+            {{-- Image --}}
+            <div class="mb-3">
+                <label class="form-label">Image</label>
+                <select name="image_select" id="image_select" class="form-select" required>
+                    @foreach($images as $img)
+                    <option value="{{ $img['id'] }}">{{ $img['name'] }}</option>
+                    @endforeach
+                </select>
             </div>
-        </div>
 
-        <button type="submit" class="btn btn-primary">
-            <i class="fas fa-server me-2"></i>Create VM
-        </button>
-    </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-server me-2"></i>Create VM
+            </button>
+        </div>
+    </form>
 </div>
 @endsection
-
-@push('scripts')
-<!-- <script defer>
-        document.addEventListener('DOMContentLoaded', function () {
-            const flavorCards = document.querySelectorAll('.flavor-card');
-            const selectButtons = document.querySelectorAll('.select-flavor');
-            const selectedFlavorInput = document.getElementById('selected_flavor_id');
-            const selectedImageInput = document.getElementById('selected_image_id');
-            const imageSelect = document.getElementById('image_select');
-            const networkSelect = document.getElementById('network_select');
-            const selectedNetworkInput = document.getElementById('selected_network_id');
-            //const createButton = document.getElementById('create-server');
-
-            // Add click event to each select button
-            selectButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    const flavorId = this.dataset.flavorId;
-
-                    // Remove selection from all cards
-                    flavorCards.forEach(card => {
-                        card.classList.remove('selected');
-                        card.querySelector('.selected-indicator').style.display = 'none';
-                        card.querySelector('.select-flavor').textContent = 'Select';
-                    });
-
-                    // Add selection to clicked card
-                    const selectedCard = this.closest('.flavor-card');
-                    selectedCard.classList.add('selected');
-                    selectedCard.querySelector('.selected-indicator').style.display = 'block';
-                    this.textContent = 'Selected';
-
-                    // Update hidden input
-                    selectedFlavorInput.value = flavorId;
-
-                    // Enable submit button if both flavor and image are selected
-                    // checkFormCompletion();
-                    console.log(selectedFlavorInput.value);
-
-                });
-            });
-            // Add change event to image select
-            imageSelect.addEventListener('change', function () {
-                const imageId = this.value;
-
-                selectedImageInput.value = imageId;
-                console.log(imageId);
-                // Enable submit button if both flavor and image are selected
-                // checkFormCompletion();
-            });
-
-            networkSelect.addEventListener('change', function () {
-                const networkId = this.value;
-
-                selectedNetworkInput.value = networkId;
-                console.log(networkId);
-                // Enable submit button if both flavor and image are selected
-                // checkFormCompletion();
-            });
-
-            // function checkFormCompletion() {
-            //     const flavorSelected = selectedFlavorInput.value !== '';
-            //     const imageSelected = document.getElementById('selected_image_id').value !== '';
-
-            //     createButton.disabled = !(flavorSelected && imageSelected);
-            // }
-        });
-    </script> -->
-@endpush

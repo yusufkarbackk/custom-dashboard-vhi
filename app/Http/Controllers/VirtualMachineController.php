@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
+use function Laravel\Prompts\progress;
+
 class VirtualMachineController extends Controller
 {
     protected $userService;
@@ -23,7 +25,7 @@ class VirtualMachineController extends Controller
     {
         $user = Auth::user();
 
-        dd($user);
+        //dd($user);
         $user_token = Session::get('vhi_admin_token');
         if (!$user_token) {
             $this->userService->refreshUserToken($user->name, $user->vhi_domain_id, $user->password, $user->vhi_project_id->first());
@@ -56,28 +58,44 @@ class VirtualMachineController extends Controller
 
     public function store(Request $request)
     {
+        //dd($request);
         $request->validate([
-            'name' => 'required',
-            'imageRef' => 'required',
-            'flavorRef' => 'required',
-            'networks' => 'required|array',
+            'vm_name' => 'required',
+            'flavor_id' => 'required',
+            'image_select' => 'required',
         ]);
+
+        $user_token = Session::get('vhi_user_token');
 
         try {
             $response = Http::withHeaders([
-                'X-Auth-Token' => session('vhi_admin_token'), // or your token variable
+                'X-Auth-Token' => $user_token, // or your token variable
             ])
                 ->withoutVerifying() // bypass SSL cert validation
-                ->post('https://10.21.0.240:8774/v2.1/servers', [
+                ->post(env('NOVA_URL') . 'v2.1/servers', [
                     'server' => [
-                        'name' => $request->name,
+                        'name' => $request->vm_name,
                         // 'imageRef' => $request->imageRef,
-                        'flavorRef' => $request->flavorRef,
-                        'networks' => $request->networks,
+                        'flavorRef' => $request->flavor_id,
+                        'networks' => [
+                            [
+                                "uuid" => env('PUBVNAT_ID')
+                            ]
+                        ],
+                        "block_device_mapping_v2" => [
+                            [
+                                "boot_index" => "0",
+                                "uuid" => $request->image_select,
+                                "source_type" => 'image',
+                                "volume_size" => 10,
+                                "destination_type" => 'volume',
+                                "delete_on_termination" => true
+                            ]
+                        ]
                     ],
                 ]);
 
-            dd($response->json());
+            //dd($response->json());
 
             return redirect()->route('servers.index')->with('success', 'Server created successfully.');
         } catch (\Throwable $th) {
@@ -101,5 +119,44 @@ class VirtualMachineController extends Controller
         // } catch (\Exception $e) {
         //     return response()->json(['error' => 'Failed to retrieve flavor: ' . $e->getMessage()], 500);
         // }
+    }
+
+    public function show($projectId, $serverId)
+    {
+        $user_token = Session::get('vhi_user_token');
+        //dd($user_token);
+        //dd($user_token);
+        // if (!$user_token) {
+        //     $this->userService->refreshUserToken($user->name, $user->vhi_domain_id, $user->password, $id);
+        //     $user_token = Session::get('vhi_user_token');
+        // }
+
+        $serverResponse = Http::withHeaders([
+            'X-Auth-Token' => $user_token
+        ])
+            ->withoutVerifying() // bypass SSL cert validation
+            ->get(env('NOVA_URL') . $projectId . '/servers' . '/' . $serverId);
+        //dd($serverResponse);
+        //dd($serverResponse['server']);
+        return view('servers.detail', ['data' => $serverResponse['server']]);
+    }
+
+    public function delete($projectId, $serverId)
+    {
+        $user_token = Session::get('vhi_user_token');
+
+        try {
+            $serverResponse = Http::withHeaders([
+                'X-Auth-Token' => $user_token
+            ])
+                ->withoutVerifying() // bypass SSL cert validation
+                ->delete(env('NOVA_URL') . '/v2.1' . '/' . $projectId . '/servers' . '/' . $serverId);
+            //dd($serverResponse);
+
+            return redirect()->route('projects.show', $projectId)->with('success', 'VM deleted successfully.');
+        } catch (\Throwable $th) {
+            //throw $th;
+            return redirect()->route('projetcs.show', $projectId)->with('error', 'Failed to delete VM: ' . $th->getMessage());
+        }
     }
 }

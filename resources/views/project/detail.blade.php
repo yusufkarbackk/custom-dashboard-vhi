@@ -9,7 +9,7 @@
     <div class="alert alert-success">
         {{ session('success') }}
     </div>
-    @elseif (session('error'))  
+    @elseif (session('error'))
     <div class="alert alert-danger">
         {{ session('error') }}
     </div>
@@ -37,6 +37,7 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -45,9 +46,20 @@
             <tr>
                 <td>{{ $server['id'] }}</td>
                 <td>
-                    <a href="">
+                    <a href="{{route('servers.show', ['projectId' => $project['id'], 'serverId' => $server['id']])}}">
                         {{ $server['name'] }}
                     </a>
+                </td>
+                <td>
+                    <form action="{{route('servers.delete', ['projectId' => $project['id'], 'serverId' => $server['id']])}}" method="post"
+                        onsubmit="return confirm('Are you sure you want to delete this VM?');">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit" class="btn btn-danger">
+                            Delete
+                        </button>
+                    </form>
                 </td>
             </tr>
             @endforeach
