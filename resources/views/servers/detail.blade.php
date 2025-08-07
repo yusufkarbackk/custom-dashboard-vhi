@@ -25,6 +25,15 @@
             <p><strong>Operating System:</strong> {{ $data['image_metadata']['os_distro']}}</p>
             <p><strong>Created At:</strong> {{ $data['created'] }}</p>
         </div>
+        <form action="{{route('servers.delete', ['projectId' => $projectId, 'serverId' => $data['id']])}}" method="post"
+            onsubmit="return confirm('Are you sure you want to delete this VM?');">
+            @csrf
+            @method('DELETE')
+
+            <button type="submit" class="btn btn-danger">
+                Delete
+            </button>
+        </form>
     </div>
     </table>
 </div>

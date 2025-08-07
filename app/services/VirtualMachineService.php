@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
@@ -14,7 +15,7 @@ class VirtualMachineService
     public function getImages()
     {
         $user_token = Session::get('vhi_user_token');
-        
+
         $response = Http::withHeaders([
             'X-Auth-Token' => $user_token,
         ])
@@ -124,5 +125,42 @@ class VirtualMachineService
             ]);
 
         return $response->json();
+    }
+
+    public function createPort($portName)
+    {
+        try {
+            $user_token = Session::get('vhi_user_token');
+
+            $response = Http::withHeaders([
+                'X-Auth-Token' => $user_token,
+            ])
+                ->withoutVerifying() // bypass SSL cert validation
+                ->post(env('NEUTRON_URL') . "/v2.0/ports", [
+                    'port' => [
+                        'network_id' => env('PUBVNAT_ID'),
+                        'name' => $portName,
+                    ],
+                ]);
+            return $response['port']['id'];
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+    }
+
+    public function attachFloatingIp($floatingIpId, $portId)
+    {
+        $user_token = Session::get('vhi_user_token');
+
+        $response = Http::withHeaders([
+            'X-Auth-Token' => $user_token,
+        ])
+            ->withoutVerifying() // bypass SSL cert validation
+            ->post(env('NEUTRON_URL') . "/v2.0/ports" . $floatingIpId, [
+                'floatingip' => [
+                    'port_id' => $portId,
+                ],
+            ]);
+        return $response['port']['id'];
     }
 }

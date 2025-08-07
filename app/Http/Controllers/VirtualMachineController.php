@@ -66,20 +66,23 @@ class VirtualMachineController extends Controller
         ]);
 
         $user_token = Session::get('vhi_user_token');
+        //dd($user_token);
+        $portId = $this->virtualMachineService->createPort("port-" . $request->vm_name);
+        //dd($portId);
 
         try {
             $response = Http::withHeaders([
                 'X-Auth-Token' => $user_token, // or your token variable
             ])
                 ->withoutVerifying() // bypass SSL cert validation
-                ->post(env('NOVA_URL') . 'v2.1/servers', [
+                ->post(env('NOVA_URL') . '/servers', [
                     'server' => [
                         'name' => $request->vm_name,
                         // 'imageRef' => $request->imageRef,
                         'flavorRef' => $request->flavor_id,
                         'networks' => [
                             [
-                                "uuid" => env('PUBVNAT_ID')
+                                "port" => $portId
                             ]
                         ],
                         "block_device_mapping_v2" => [
@@ -97,10 +100,10 @@ class VirtualMachineController extends Controller
 
             //dd($response->json());
 
-            return redirect()->route('servers.index')->with('success', 'Server created successfully.');
+            return redirect()->route('projects.index')->with('success', 'Server created successfully.');
         } catch (\Throwable $th) {
             //throw $th;
-            return redirect()->route('servers.index')->with('error', 'Failed to create server: ' . $th->getMessage());
+            return redirect()->route('servers.create')->with('error', 'Failed to create server: ' . $th->getMessage());
         }
     }
 
@@ -138,7 +141,7 @@ class VirtualMachineController extends Controller
             ->get(env('NOVA_URL') . $projectId . '/servers' . '/' . $serverId);
         //dd($serverResponse);
         //dd($serverResponse['server']);
-        return view('servers.detail', ['data' => $serverResponse['server']]);
+        return view('servers.detail', ['data' => $serverResponse['server'], 'projectId' =>$projectId]);
     }
 
     public function delete($projectId, $serverId)
@@ -150,7 +153,7 @@ class VirtualMachineController extends Controller
                 'X-Auth-Token' => $user_token
             ])
                 ->withoutVerifying() // bypass SSL cert validation
-                ->delete(env('NOVA_URL') . '/v2.1' . '/' . $projectId . '/servers' . '/' . $serverId);
+                ->delete(env('NOVA_URL') . '/' . $projectId . '/servers' . '/' . $serverId);
             //dd($serverResponse);
 
             return redirect()->route('projects.show', $projectId)->with('success', 'VM deleted successfully.');

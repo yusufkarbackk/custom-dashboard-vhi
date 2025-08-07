@@ -201,7 +201,7 @@ class AdminService
                     'X-Auth-Token' => $authToken,
                     'Content-Type' => 'application/json',
                 ])
-                ->post(getenv('NEUTRON_URL') . "v2.0/rbac-policies", [
+                ->post(getenv('NEUTRON_URL') . "/v2.0/rbac-policies", [
                     'rbac_policy' => [
                         "object_type" => "network",
                         "object_id" => env('PUBVNAT_ID'),
